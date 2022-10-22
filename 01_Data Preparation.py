@@ -1,5 +1,10 @@
 # Databricks notebook source
-# MAGIC %md The purpose of this notebook is to prepare the data for use in the picking optimization.  This notebook was developed on a **Databricks 10.4 LTS** cluster.
+# MAGIC %md 
+# MAGIC You may find this series of notebooks at https://github.com/databricks-industry-solutions/optimized-picking. For more information about this solution accelerator, visit https://www.databricks.com/solutions/accelerators/order-picking-optimization.
+
+# COMMAND ----------
+
+# MAGIC %md The purpose of this notebook is to prepare the data for use in the picking optimization. 
 
 # COMMAND ----------
 
