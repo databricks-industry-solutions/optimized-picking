@@ -368,7 +368,7 @@ def get_tsp_optimized_products(products_series: pd.Series, zones_series: pd.Seri
 
 # COMMAND ----------
 
-# MAGIC %md It's important to note as you review the previous function that the TSP optimization (encapsulted in the *perform_tsp_routing* function) receives a travel time matrix for just the zones associated with a given order.  It returns the sequence of zones based on their position in the reduced matrix provided.  For example, if we had an order with zones \[1, 5, 8, 15\], we'd provide the function with a 4x4 travel time matrix focused on just those zones.  The output would reference each zone by index position in the provided (reduced) matrix.  For example, we might receive back something like \[0, 2, 1, 3\] which we would translate as zones \[1, 8, 5, 15\] given the structure of the matrix submitted to the optimization fundion. The unit of code commented as *translate zone indexes back to recognized zones* tackles this work.
+# MAGIC %md It's important to note as you review the previous function that the TSP optimization (encapsulated in the *perform_tsp_routing* function) receives a travel time matrix for just the zones associated with a given order.  It returns the sequence of zones based on their position in the reduced matrix provided.  For example, if we had an order with zones \[1, 5, 8, 15\], we'd provide the function with a 4x4 travel time matrix focused on just those zones.  The output would reference each zone by index position in the provided (reduced) matrix.  For example, we might receive back something like \[0, 2, 1, 3\] which we would translate as zones \[1, 8, 5, 15\] given the structure of the matrix submitted to the optimization function. The unit of code commented as *translate zone indexes back to recognized zones* tackles this work.
 # MAGIC 
 # MAGIC In addition, it's important to consider that within a zone, we are picking all products for that zone.  For example, if you had an order with 2 products in zone 5, you might start with a original zone sequence of \[1, 5, 8, 5, 15\] and receive back an optimized zone sequence of \[1, 8, 5, 15\].  When the picker is sent to zone 5, both products will be picked at that time.  The unit of code commented as *map products to optimized zones* ensures products are sequenced appropriately given the condensed output of the TSP optimization function.
 # MAGIC 
@@ -429,7 +429,7 @@ display(orders.select('order_id','products','zones','priority_products'))
 # MAGIC 
 # MAGIC The priority-optimized product list performs a simple sort of products based on their assigned priority values.  With nearly 50,000 products with assigned priorities between 0.01 and 0.99, it's very likely multiple products in a given order may have identical priority values. In that situation, we may wish to consider the sequence within which we pick items with identical priorities in order to minimize traversal time.  Again, we are only making these adjustments for those products with identical priorities so that the overall priority sorting is preserved.
 # MAGIC 
-# MAGIC This type of optimization is referred to as a sequential ordering problem (SOP) optimization.  There are several algorithms for solving such problems.  We will be using a simulated annealing ant colony optimization algorithm inline with the technique employed by the authors of the paper on which we are basing this work.  To that end, we are barrowing heavily from the code provided by Saleh Afzoon with his permission in his [SOP-Optimization GitHub repository](https://github.com/salehafzoon/SOP-optimization). 
+# MAGIC This type of optimization is referred to as a sequential ordering problem (SOP) optimization.  There are several algorithms for solving such problems.  We will be using a simulated annealing ant colony optimization algorithm inline with the technique employed by the authors of the paper on which we are basing this work.  To that end, we are borrowing heavily from the code provided by Saleh Afzoon with his permission in his [SOP-Optimization GitHub repository](https://github.com/salehafzoon/SOP-optimization). 
 # MAGIC 
 # MAGIC More specifically, we are using a modified version of the code provided in the *main.py* file in the repository's *SA* folder.  Because this code was originally written to be called from the Python command line, we've made several modifications to simplify its use within a pandas UDF:
 # MAGIC 
@@ -485,10 +485,10 @@ class SOP:
         self.edges = []
         self.dependencies = []
         self.dimension = problem.dimension
-        problemEgdes = list(problem.get_edges())
+        problemEdges = list(problem.get_edges())
         problemWeights = problem.edge_weights[1:]
-        for i in range(len(problemEgdes)):
-            self.edges.append(self.Edge(problemEgdes[i], problemWeights[i]))
+        for i in range(len(problemEdges)):
+            self.edges.append(self.Edge(problemEdges[i], problemWeights[i]))
 
 
   def calculateDependencies(self, problem):
@@ -705,7 +705,7 @@ class SOP:
     #last_cost = sys.maxsize # original
     
     answer = list(range(problem.dimension)) # initial answer is original sort
-    last_cost = self.cost_function(problem, list(range(problem.dimension))) # get cost for this intial answer
+    last_cost = self.cost_function(problem, list(range(problem.dimension))) # get cost for this initial answer
 
     # take best of n runs
     for _ in range(self.NUM_TRIALS):
@@ -727,7 +727,7 @@ class SOP:
 
 # COMMAND ----------
 
-# MAGIC %md It's important to note in the SOP optimization logic above we've modified the initial answer given by the algorithm to be the original sort of the items associated with a product. We found that occassionally the algorithm would arrive at an answer that was slightly worse than the original sort if we didn't start with this initial answer. This would likely be resolved by increasing the number of iterations but that would add computational time to our efforts so this compromise was employed.
+# MAGIC %md It's important to note in the SOP optimization logic above we've modified the initial answer given by the algorithm to be the original sort of the items associated with a product. We found that occasionally the algorithm would arrive at an answer that was slightly worse than the original sort if we didn't start with this initial answer. This would likely be resolved by increasing the number of iterations but that would add computational time to our efforts so this compromise was employed.
 # MAGIC 
 # MAGIC With the SOP optimization logic in place, we now need to define the problem we wish the algorithm to solve. Using the TSPLIB95 format which provides a standard way of articulating various optimization problems, we can express our SOP problem as follows: 
 
@@ -819,7 +819,7 @@ def get_sop_optimized_products(sorted_products_series: pd.Series, sorted_zones_s
    
     answers = []
     
-    # instanciate SOP class
+    # instantiate SOP class
     sop = SOP()
     
     # for each row in incoming pd.Series
@@ -909,7 +909,7 @@ def get_relaxed_priorities(priorities_series: pd.Series, thresholds_series: pd.S
     # initialize priorities
     adjusted_priorities = sorted_priorities
 
-    # adjust priorities based on thredhold
+    # adjust priorities based on threshold
     x = 2 # start with second item in list (x=0 is store entrance)
     while x < len(sorted_priorities)-1:
       # if difference between current priority and prior priority less than threshold
@@ -1109,7 +1109,7 @@ display(
 # MAGIC 
 # MAGIC **NOTE** With our dataset, the random sort and the priority-based sorting resulted in similar fulfillment times.  This is because the priority scores in this dataset are themselves randomly assigned. Priority scores generated on real-world data may provide different results.
 # MAGIC 
-# MAGIC For our analysis, there is no one right way to optimize the orders but instead multiple approaches avaialble based on competing priorities of time-reduction and damage prevention.  Incorporation of damage statistics and product cost metrics might help organizations identify an ideal strategy for their needs.
+# MAGIC For our analysis, there is no one right way to optimize the orders but instead multiple approaches available based on competing priorities of time-reduction and damage prevention.  Incorporation of damage statistics and product cost metrics might help organizations identify an ideal strategy for their needs.
 
 # COMMAND ----------
 
@@ -1119,11 +1119,11 @@ display(
 # MAGIC 
 # MAGIC That said, it's not inconceivable that organizations processing large volumes of orders may wish to apply one or more of these algorithms against incoming orders in order to optimize them before they are delivered to workers in a store.  In such a scenario, a solution would need to be able to solve multiple incoming orders in a timely manner and send optimized results to downstream applications quickly.
 # MAGIC 
-# MAGIC While the approaches explored in this notebook have centered on batch processing, the pandas UDFs used to perform the optimization work can be employed in a real-time scenario leveraging Databrick's [streaming capabilities](https://docs.databricks.com/spark/latest/structured-streaming/index.html).  In such a solution, newly placed orders might be streamed to a data ingest layer such as Apache Kafka, Azure IOT HUb/Event Hub, AWS Kinesis, GCP Pub-Sub or any number of cloud storage services, read in real-time using Databricks Structured Streaming, transformed using the appropriate algorithm (packaged as a pandas UDF), and then delivered to a downstream data ingest layer accessible to various operational systems.</p>
+# MAGIC While the approaches explored in this notebook have centered on batch processing, the pandas UDFs used to perform the optimization work can be employed in a real-time scenario leveraging Databricks' [streaming capabilities](https://docs.databricks.com/spark/latest/structured-streaming/index.html).  In such a solution, newly placed orders might be streamed to a data ingest layer such as Apache Kafka, Azure IOT HUb/Event Hub, AWS Kinesis, GCP Pub-Sub or any number of cloud storage services, read in real-time using Databricks Structured Streaming, transformed using the appropriate algorithm (packaged as a pandas UDF), and then delivered to a downstream data ingest layer accessible to various operational systems.</p>
 # MAGIC 
 # MAGIC <img src='https://brysmiwasb.blob.core.windows.net/demos/images/picking_streaming.png' width=700>
 # MAGIC   
-# MAGIC The beauty of such an approach is that algorithms vetted against historical data could be rapidly deployed into a real-time optimization pipeline as the mechanics of processing real-time data in Databricks closely mirror those of processing batch data.  As the orgnization experiences variable workloads, the Databricks environment could be scaled up and down to keep pace with demand for the services, keeping the cost of optimizing the orders to a minimum.
+# MAGIC The beauty of such an approach is that algorithms vetted against historical data could be rapidly deployed into a real-time optimization pipeline as the mechanics of processing real-time data in Databricks closely mirror those of processing batch data.  As the organization experiences variable workloads, the Databricks environment could be scaled up and down to keep pace with demand for the services, keeping the cost of optimizing the orders to a minimum.
 
 # COMMAND ----------
 
