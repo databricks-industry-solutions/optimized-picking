@@ -30,7 +30,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC The individual files that make up each entity in this dataset can then be presented as a queriable table as part of a database with a high-level schema as follows:</p>
+# MAGIC The individual files that make up each entity in this dataset can then be presented as a queryable table as part of a database with a high-level schema as follows:</p>
 # MAGIC 
 # MAGIC <img src='https://brysmiwasb.blob.core.windows.net/demos/images/instacart_schema2.png' width=300>
 
