@@ -8,7 +8,9 @@
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC Set Kaggle credential configuration values in the block below: You can set up a [secret scope](https://docs.databricks.com/security/secrets/secret-scopes.html) to manage credentials used in notebooks. For the block below, we have manually set up the `solution-accelerator-cicd` secret scope and saved our credentials there for internal testing purposes.
+# MAGIC Set Kaggle credential configuration values in the block below: You can set up a [secret scope](https://docs.databricks.com/security/secrets/secret-scopes.html) to manage credentials used in notebooks. For the block below, we have set up the `solution-accelerator-cicd` secret scope and saved our credentials there. See the `./RUNME` notebook for an automated guide on how to set up the secret scope. 
+# MAGIC
+# MAGIC Don't forget to accept the [Terms](https://www.kaggle.com/competitions/instacart-market-basket-analysis/data) of the challenge. 
 
 # COMMAND ----------
 
